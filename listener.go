@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -133,7 +134,7 @@ func getUpdatesChannel(token string) tgbotapi.UpdatesChannel {
 	botApi.Debug = false
 
 	botUrl, _ := url.Parse(os.Getenv("APP_URL"))
-	botUrl.Path = token
+	botUrl.Path = path.Join(botUrl.Path, token)
 
 	_, err = botApi.Request(&tgbotapi.WebhookConfig{
 		URL: botUrl,
