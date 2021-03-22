@@ -58,6 +58,7 @@ func main() {
 
 	for _, botId := range botIds {
 		go func(botId BotIdentifier) {
+			log.Printf("Listening on update channel for bot %s.", botId.name)
 			for update := range getUpdatesChannel(botId.token) {
 				botUpdates <- BotUpdate{botId.name, update}
 			}
@@ -88,24 +89,30 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("Published to sns: %s", *output.MessageId)
-		log.Printf("BotUpdate: %+v", botupdate)
+		log.Printf("Published to sns with MessageId %s", *output.MessageId)
 	}
 
 }
 
 func getCommandTopicArn() string {
-	result, _ := ssmclient.GetParameter(&ssm.GetParameterInput{
+	result, err := ssmclient.GetParameter(&ssm.GetParameterInput{
 		Name: aws.String(topicArn),
 	})
+	if err != nil {
+		panic(err)
+	}
 	return *result.Parameter.Value
 }
 
 func getBotIdentifiers() []*BotIdentifier {
-	parameters, _ := ssmclient.GetParametersByPath(&ssm.GetParametersByPathInput{
+	log.Print("Getting bot identifiers.")
+	parameters, err := ssmclient.GetParametersByPath(&ssm.GetParametersByPathInput{
 		Path:           aws.String(tokenDirectory),
 		WithDecryption: aws.Bool(true),
 	})
+	if err != nil {
+		panic(err)
+	}
 	bots := []*BotIdentifier{}
 	for _, parameter := range parameters.Parameters {
 		bots = append(bots, &BotIdentifier{
@@ -113,6 +120,7 @@ func getBotIdentifiers() []*BotIdentifier {
 			token: *parameter.Value,
 		})
 	}
+	log.Printf("Found %d bots.", len(bots))
 	return bots
 }
 
