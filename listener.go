@@ -69,7 +69,7 @@ func main() {
 	for botupdate := range botUpdates {
 		updateBytes, _ := json.Marshal(&botupdate.update)
 		updateString := string(updateBytes)
-		if botupdate.update.Message.Command() == "" {
+		if botupdate.update.Message == nil || botupdate.update.Message.Command() == "" {
 			continue
 		}
 		topicArn := getCommandTopicArn()
